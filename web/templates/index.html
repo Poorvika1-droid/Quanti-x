@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quanti-x - Officer Portal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        rail: {
+                            dark: '#0B1120',
+                            card: '#151F32',
+                            border: '#23324D',
+                            accent: '#38BDF8',
+                            tms: '#3B82F6',     // Track (Blue)
+                            smms: '#10B981',    // Signalling (Green)
+                            tdms: '#F59E0B',    // TRD/OHE (Amber)
+                            shadow: '#A855F7',  // Shadow/Joint (Purple)
+                            danger: '#EF4444'   // Critical/Flaw (Red)
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-rail-dark text-slate-100 min-h-screen font-sans flex flex-col selection:bg-sky-500 selection:text-white">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-rail-card/90 backdrop-blur border-b border-rail-border sticky top-0 z-50 px-6 py-3 shadow-lg">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
+                    <i class="fa-solid fa-train-subway text-white text-xl"></i>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                            Quanti-x
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 border border-violet-200 font-mono font-medium">OFFICER PORTAL</span>
+                        </h1>
+                    </div>
+                    <p class="text-xs text-slate-400">Officer decision-support cockpit • Engineer requests → AI analysis → sanctioned block</p>
+                </div>
+            </div>
+
+            <!-- Corridor Info & Real-Time Stats -->
+            <div class="hidden lg:flex items-center space-x-4">
+                <a href="/logout" class="flex items-center gap-2 text-xs px-3 py-2 rounded-md bg-white border border-slate-200 text-slate-700 hover:border-violet-500">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Log out
+                </a>
+                <div class="flex items-center space-x-2 bg-slate-900/60 px-3 py-1.5 rounded-md border border-rail-border">
+                    <i class="fa-solid fa-route text-sky-400 text-sm"></i>
+                    <div>
+                        <span class="text-[10px] uppercase tracking-wider text-slate-400 block font-mono">Corridor</span>
+                        <span id="header-corridor" class="text-xs font-semibold text-slate-200">Loading corridor...</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2 bg-slate-900/60 px-3 py-1.5 rounded-md border border-rail-border">
+                    <i class="fa-solid fa-shield-halved text-emerald-400 text-sm"></i>
+                    <div>
+                        <span class="text-[10px] uppercase tracking-wider text-slate-400 block font-mono">Asset Availability</span>
+                        <span id="header-aai" class="text-xs font-bold text-emerald-400 font-mono">96.8%</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2 bg-slate-900/60 px-3 py-1.5 rounded-md border border-rail-border">
+                    <i class="fa-solid fa-layer-group text-purple-400 text-sm"></i>
+                    <div>
+                        <span class="text-[10px] uppercase tracking-wider text-slate-400 block font-mono">Shadow Efficiency</span>
+                        <span id="header-shadow-gain" class="text-xs font-bold text-purple-400 font-mono">+48.5% Hrs Saved</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2 bg-slate-900/60 px-3 py-1.5 rounded-md border border-rail-border">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span id="live-clock" class="text-xs font-mono text-slate-300">2026-08-30 06:00 IST</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="flex space-x-1 mt-3 overflow-x-auto border-t border-slate-800/80 pt-2 text-xs font-medium scrollbar-thin">
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn active-tab px-3.5 py-1.5 rounded-md transition flex items-center space-x-2">
+                <i class="fa-solid fa-gauge-high"></i>
+                <span>Executive Dashboard</span>
+            </button>
+            <button onclick="switchTab('track-map')" id="tab-track-map" class="tab-btn px-3.5 py-1.5 rounded-md transition flex items-center space-x-2 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-map-location-dot"></i>
+                <span>Corridor & GIS Track Map</span>
+            </button>
+            <button onclick="switchTab('gantt-schedule')" id="tab-gantt-schedule" class="tab-btn px-3.5 py-1.5 rounded-md transition flex items-center space-x-2 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-timeline"></i>
+                <span>Multi-Horizon Gantt</span>
+            </button>
+            <button onclick="switchTab('data-hub')" id="tab-data-hub" class="tab-btn px-3.5 py-1.5 rounded-md transition flex items-center space-x-2 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-database"></i>
+                <span>Data Hub (TMS/SMMS/TDMS/COA)</span>
+            </button>
+            <button onclick="switchTab('ai-priority')" id="tab-ai-priority" class="tab-btn px-3.5 py-1.5 rounded-md transition flex items-center space-x-2 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-brain"></i>
+                <span>AI Risk & Prioritizer</span>
+            </button>
+            <button onclick="switchTab('what-if')" id="tab-what-if" class="tab-btn px-3.5 py-1.5 rounded-md transition flex items-center space-x-2 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-vial-circle-check"></i>
+                <span>What-If Simulation Studio</span>
+            </button>
+            <button onclick="switchTab('memos')" id="tab-memos" class="tab-btn px-3.5 py-1.5 rounded-md transition flex items-center space-x-2 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-file-signature"></i>
+                <span>Official IR Memos (T/351)</span>
+            </button>
+        </nav>
+    </header>
+
+    <!-- Main Dynamic Content Container -->
+    <main class="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
+
+        <!-- TAB 1: EXECUTIVE DASHBOARD -->
+        <section id="view-dashboard" class="tab-content block space-y-6">
+            <!-- Engineer Request Inbox -->
+            <div class="bg-rail-card rounded-xl border border-purple-500/30 p-5 shadow-lg space-y-4">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-inbox text-purple-400"></i>
+                            <h2 class="text-lg font-bold text-white">Engineer Request Inbox</h2>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30 font-mono">SQLITE WORKFLOW</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1">TMS, SMMS and TDMS field requests arrive here. Analyze first; AI recommends, officer decides.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input id="officer-name" value="Control Officer" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white" placeholder="Officer name">
+                        <select id="officer-request-filter" onchange="loadOfficerRequests()" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white">
+                            <option value="ALL">All requests</option><option value="SUBMITTED">Submitted</option><option value="UNDER_REVIEW">Under review</option><option value="APPROVED">Approved</option><option value="REJECTED">Rejected</option><option value="COMPLETED">Completed</option>
+                        </select>
+                        <button onclick="loadOfficerRequests()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-xs hover:border-purple-500"><i class="fa-solid fa-rotate"></i></button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">
+                    <div class="p-3 rounded-lg bg-slate-950 border border-slate-800"><span class="text-slate-500 uppercase font-mono text-[9px]">Total</span><div id="req-count-total" class="text-xl font-mono font-bold">0</div></div>
+                    <div class="p-3 rounded-lg bg-slate-950 border border-sky-500/20"><span class="text-sky-400 uppercase font-mono text-[9px]">Submitted</span><div id="req-count-submitted" class="text-xl font-mono font-bold text-sky-300">0</div></div>
+                    <div class="p-3 rounded-lg bg-slate-950 border border-amber-500/20"><span class="text-amber-400 uppercase font-mono text-[9px]">Review</span><div id="req-count-review" class="text-xl font-mono font-bold text-amber-300">0</div></div>
+                    <div class="p-3 rounded-lg bg-slate-950 border border-emerald-500/20"><span class="text-emerald-400 uppercase font-mono text-[9px]">Approved</span><div id="req-count-approved" class="text-xl font-mono font-bold text-emerald-300">0</div></div>
+                    <div class="p-3 rounded-lg bg-slate-950 border border-red-500/20"><span class="text-red-400 uppercase font-mono text-[9px]">Rejected</span><div id="req-count-rejected" class="text-xl font-mono font-bold text-red-300">0</div></div>
+                </div>
+
+                <div class="grid lg:grid-cols-5 gap-4">
+                    <div class="lg:col-span-3">
+                        <div id="officer-request-list" class="space-y-3 max-h-[430px] overflow-y-auto pr-1">
+                            <div class="p-4 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-500">No engineer requests loaded yet.</div>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+                        <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-brain text-amber-400 mr-2"></i>Officer Analysis Panel</h3>
+                        <div id="officer-analysis-panel" class="mt-3 text-xs text-slate-500">Select <b>Analyze</b> on a request. You will see AI score, timetable evidence, free windows and shadow-block opportunity before deciding.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Station-Level Quanti-x Analysis -->
+            <div class="bg-rail-card rounded-xl border border-sky-500/30 p-5 shadow-lg space-y-5">
+                <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-magnifying-glass-location text-sky-400"></i>
+                            <h2 class="text-lg font-bold text-white">Station Block Analysis</h2>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-sky-100 text-sky-700 border border-sky-200 font-mono">LIVE DATABASE FLOW</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1">Type a station name or code. Quanti-x maps the section, checks trains, calculates maintenance priority, detects joint work, searches windows, and shows an optimizer recommendation.</p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+                        <div class="relative min-w-[280px]">
+                            <input id="station-search-input" list="station-options" value="GZB" placeholder="e.g. Ghaziabad / GZB"
+                                class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-sky-500">
+                            <datalist id="station-options"></datalist>
+                        </div>
+                        <button onclick="analyzeSelectedStation()" id="station-analyze-btn" class="px-4 py-2.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-sm transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-play"></i> Analyze Station
+                        </button>
+                    </div>
+                </div>
+
+                <div id="station-analysis-status" class="text-xs text-slate-400 font-mono">Ready. Default demo station: GZB.</div>
+
+                <div id="station-summary" class="hidden grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div class="p-3 rounded-lg bg-slate-950/70 border border-rail-border">
+                        <span class="text-[10px] text-slate-500 uppercase font-mono block">Station</span>
+                        <span id="sa-station" class="text-sm font-bold text-white">-</span>
+                    </div>
+                    <div class="p-3 rounded-lg bg-slate-950/70 border border-rail-border">
+                        <span class="text-[10px] text-slate-500 uppercase font-mono block">Trains Checked</span>
+                        <span id="sa-trains" class="text-xl font-bold font-mono text-sky-400">0</span>
+                    </div>
+                    <div class="p-3 rounded-lg bg-slate-950/70 border border-rail-border">
+                        <span class="text-[10px] text-slate-500 uppercase font-mono block">Maintenance Demands</span>
+                        <span id="sa-tasks" class="text-xl font-bold font-mono text-amber-400">0</span>
+                    </div>
+                    <div class="p-3 rounded-lg bg-slate-950/70 border border-rail-border">
+                        <span class="text-[10px] text-slate-500 uppercase font-mono block">Result</span>
+                        <span id="sa-result" class="text-sm font-bold font-mono text-emerald-400">-</span>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-bold text-white">How the system is working</h3>
+                        <span class="text-[10px] text-slate-500 font-mono">Backend decision trace</span>
+                    </div>
+                    <div id="station-workflow" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        <div class="p-3 rounded-lg bg-slate-950/60 border border-slate-800 text-xs text-slate-500">Run a station analysis to see each decision step.</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div class="rounded-lg border border-rail-border bg-slate-950/50 p-4 min-h-[180px]">
+                        <h3 class="text-xs font-bold uppercase tracking-wide text-sky-300 mb-3"><i class="fa-solid fa-train mr-1"></i> Timetable Check</h3>
+                        <div id="station-train-results" class="space-y-2 text-xs text-slate-400">No station analyzed yet.</div>
+                    </div>
+                    <div class="rounded-lg border border-rail-border bg-slate-950/50 p-4 min-h-[180px]">
+                        <h3 class="text-xs font-bold uppercase tracking-wide text-amber-300 mb-3"><i class="fa-solid fa-brain mr-1"></i> AI Priority Calculation</h3>
+                        <div id="station-priority-results" class="space-y-2 text-xs text-slate-400">No station analyzed yet.</div>
+                    </div>
+                    <div class="rounded-lg border border-rail-border bg-slate-950/50 p-4 min-h-[180px]">
+                        <h3 class="text-xs font-bold uppercase tracking-wide text-purple-300 mb-3"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Optimizer Output</h3>
+                        <div id="station-optimizer-results" class="space-y-2 text-xs text-slate-400">No station analyzed yet.</div>
+                    </div>
+                </div>
+
+                <p class="text-[10px] text-slate-500">Station analysis uses the Quanti-x operational database and supplied corridor data.</p>
+            </div>
+
+            <!-- Station Intelligence and AI Block Planner -->
+            <section class="bg-rail-card rounded-xl border border-violet-200 p-5 shadow-lg space-y-5">
+                <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-chart-line text-violet-600"></i>
+                            <h2 class="text-lg font-bold text-slate-900">Station Readiness Intelligence</h2>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 border border-violet-200 font-mono">DATABASE-SCORED</span>
+                        </div>
+                        <p class="text-xs text-slate-600 mt-1">Compare every mapped station using stored train movements, maintenance risk, and verified free-window capacity.</p>
+                    </div>
+                    <span id="station-intelligence-status" class="text-xs text-slate-500 font-mono">Loading station profiles...</span>
+                </div>
+                <div class="grid lg:grid-cols-[1.5fr_1fr] gap-5">
+                    <div class="rounded-xl border border-slate-200 bg-white p-4">
+                        <canvas id="station-readiness-chart" height="250" aria-label="Station readiness chart"></canvas>
+                    </div>
+                    <div class="rounded-xl border border-slate-200 bg-white p-4 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm font-bold text-slate-900"><i class="fa-solid fa-wand-magic-sparkles text-amber-600 mr-2"></i>AI Block Planner</h3>
+                            <span id="planner-confidence" class="text-[10px] font-mono text-slate-500">Awaiting input</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="text-[11px] text-slate-600">Station
+                                <select id="planner-station" class="mt-1 w-full rounded-lg border border-slate-200 px-2 py-2 text-xs"></select>
+                            </label>
+                            <label class="text-[11px] text-slate-600">Department
+                                <select id="planner-department" class="mt-1 w-full rounded-lg border border-slate-200 px-2 py-2 text-xs"><option>TMS</option><option>SMMS</option><option>TDMS</option></select>
+                            </label>
+                            <label class="text-[11px] text-slate-600">Duration (min)
+                                <input id="planner-duration" type="number" min="30" max="480" value="120" class="mt-1 w-full rounded-lg border border-slate-200 px-2 py-2 text-xs">
+                            </label>
+                            <label class="text-[11px] text-slate-600">Urgency
+                                <select id="planner-urgency" class="mt-1 w-full rounded-lg border border-slate-200 px-2 py-2 text-xs"><option>NORMAL</option><option>HIGH</option><option>CRITICAL</option><option>EMERGENCY</option></select>
+                            </label>
+                        </div>
+                        <textarea id="planner-question" rows="2" placeholder="Ask about this block plan (optional)" class="w-full rounded-lg border border-slate-200 px-2 py-2 text-xs"></textarea>
+                        <button onclick="runBlockPlanner()" class="w-full rounded-lg bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs py-2.5 transition"><i class="fa-solid fa-sparkles mr-2"></i>Predict Block Strategy</button>
+                        <div id="planner-result" class="rounded-lg bg-slate-50 border border-slate-200 p-3 text-xs text-slate-600">Select a station to generate a planning prediction.</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Key Metric Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Card 1: Asset Availability -->
+                <div class="bg-rail-card p-5 rounded-xl border border-rail-border shadow-md relative overflow-hidden">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-mono uppercase text-slate-400">Fixed Asset Availability</span>
+                        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                            <i class="fa-solid fa-train-track"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3 flex items-baseline justify-between">
+                        <span id="metric-aai" class="text-3xl font-bold font-mono text-white">96.8%</span>
+                        <span class="text-xs font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">+10.6% vs Manual</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-2">Downtime compressed through multi-department shadow possession</p>
+                    <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-400"></div>
+                </div>
+
+                <!-- Card 2: Shadow Blocking Savings -->
+                <div class="bg-rail-card p-5 rounded-xl border border-rail-border shadow-md relative overflow-hidden">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-mono uppercase text-slate-400">Shadow Block Hours Saved</span>
+                        <div class="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center">
+                            <i class="fa-solid fa-object-group"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3 flex items-baseline justify-between">
+                        <span id="metric-hours-saved" class="text-3xl font-bold font-mono text-purple-400">22.5 Hrs</span>
+                        <span class="text-xs font-medium text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded font-mono">48.5% Gain</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-2">1 Traffic Block granted = Track + Signals + OHE executed together</p>
+                    <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
+                </div>
+
+                <!-- Card 3: Critical Safety Compliance -->
+                <div class="bg-rail-card p-5 rounded-xl border border-rail-border shadow-md relative overflow-hidden">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-mono uppercase text-slate-400">Critical Safety Mitigation</span>
+                        <div class="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3 flex items-baseline justify-between">
+                        <span id="metric-safety" class="text-3xl font-bold font-mono text-sky-400">100%</span>
+                        <span class="text-xs font-medium text-sky-300 bg-sky-500/10 px-2 py-0.5 rounded">0 Overdue IMRs</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-2">All immediate rail fracture flaws & hot catenary jumpers scheduled</p>
+                    <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-500 to-blue-500"></div>
+                </div>
+
+                <!-- Card 4: Train Punctuality Loss -->
+                <div class="bg-rail-card p-5 rounded-xl border border-rail-border shadow-md relative overflow-hidden">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-mono uppercase text-slate-400">Train Delay Impact</span>
+                        <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3 flex items-baseline justify-between">
+                        <span id="metric-train-delay" class="text-3xl font-bold font-mono text-amber-400">45 Mins</span>
+                        <span class="text-xs font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">-78% vs Siloed</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-2">Freight trains regulated to loops; zero passenger cancellations</p>
+                    <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500"></div>
+                </div>
+            </div>
+
+            <!-- Quantitative Benchmark Comparison Table -->
+            <div class="bg-rail-card rounded-xl border border-rail-border p-5 shadow-lg space-y-4">
+                <div class="flex items-center justify-between border-b border-rail-border pb-3">
+                    <div>
+                        <h2 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-scale-balanced text-sky-400"></i>
+                            Quantitative Operational Benchmark: Decentralized Manual vs Quanti-x
+                        </h2>
+                        <p class="text-xs text-slate-400">Direct comparison across block utilization, track downtime, train punctuality, and safety</p>
+                    </div>
+                    <span class="text-xs bg-sky-500/20 text-sky-300 border border-sky-500/30 px-3 py-1 rounded-full font-mono">Simulated over 150 KM Corridor</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left text-slate-300">
+                        <thead class="bg-slate-900/80 text-slate-400 uppercase font-mono border-b border-rail-border">
+                            <tr>
+                                <th class="py-3 px-4">Performance Dimension</th>
+                                <th class="py-3 px-4 text-rose-300">Current Manual Siloed Planning</th>
+                                <th class="py-3 px-4 text-emerald-300">Quanti-x (Integrated)</th>
+                                <th class="py-3 px-4 text-sky-300">Net Operational Gain</th>
+                            </tr>
+                        </thead>
+                        <tbody id="benchmark-table-body" class="divide-y divide-slate-800">
+                            <!-- Populated dynamically by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Departmental Breakdown & Horizon Distribution -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Department Demands -->
+                <div class="bg-rail-card p-5 rounded-xl border border-rail-border space-y-4">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-network-wired text-sky-400"></i>
+                        Departmental Request Integration
+                    </h3>
+                    <div id="dept-breakdown-cards" class="space-y-3">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+
+                <!-- Multi-Horizon Distribution -->
+                <div class="bg-rail-card p-5 rounded-xl border border-rail-border space-y-4">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-days text-purple-400"></i>
+                        Multi-Horizon Planning Allocation
+                    </h3>
+                    <div class="space-y-3 text-xs">
+                        <div class="p-3 rounded-lg bg-slate-900/60 border border-rail-border flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                                <div>
+                                    <div class="font-bold text-slate-200">Daily Tactical (24-48h)</div>
+                                    <div class="text-[11px] text-slate-400">Immediate IMR defects, urgent contact wire fixes</div>
+                                </div>
+                            </div>
+                            <span id="daily-count-badge" class="font-mono font-bold text-rose-400 text-sm">6 Blocks</span>
+                        </div>
+
+                        <div class="p-3 rounded-lg bg-slate-900/60 border border-rail-border flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                                <div>
+                                    <div class="font-bold text-slate-200">Weekly Rolling (7-Day)</div>
+                                    <div class="text-[11px] text-slate-400">Tamping machines, UNIMAT, TRD tower wagons</div>
+                                </div>
+                            </div>
+                            <span id="weekly-count-badge" class="font-mono font-bold text-amber-400 text-sm">18 Blocks</span>
+                        </div>
+
+                        <div class="p-3 rounded-lg bg-slate-900/60 border border-rail-border flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
+                                <div>
+                                    <div class="font-bold text-slate-200">Monthly Strategic (30-Day)</div>
+                                    <div class="text-[11px] text-slate-400">BCM deep screening, S&T POH, TSR elimination</div>
+                                </div>
+                            </div>
+                            <span id="monthly-count-badge" class="font-mono font-bold text-sky-400 text-sm">34 Blocks</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TSR (Speed Restriction) Removal Tracker -->
+                <div class="bg-rail-card p-5 rounded-xl border border-rail-border space-y-4">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-gauge text-emerald-400"></i>
+                        TSR Speed Restriction Eradication
+                    </h3>
+                    <div id="tsr-list" class="space-y-2 text-xs">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: CORRIDOR & GIS TRACK MAP -->
+        <section id="view-track-map" class="tab-content hidden space-y-6">
+            <div class="bg-rail-card p-5 rounded-xl border border-rail-border space-y-4">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border-b border-rail-border pb-3">
+                    <div>
+                        <h2 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-map-location-dot text-sky-400"></i>
+                            150 KM High-Density Corridor Track Schematic (UP & DN Lines)
+                        </h2>
+                        <p class="text-xs text-slate-400">Interactive track sections, station interlockings, active TSR bottlenecks, and maintenance possession blocks</p>
+                    </div>
+
+                    <!-- Map Legend -->
+                    <div class="flex flex-wrap items-center gap-3 text-[11px]">
+                        <span class="flex items-center gap-1.5 text-slate-300">
+                            <span class="w-3 h-1 bg-sky-500 rounded"></span> Clear Track
+                        </span>
+                        <span class="flex items-center gap-1.5 text-rose-400">
+                            <span class="w-3 h-1 bg-rose-500 rounded"></span> TSR Speed Restriction
+                        </span>
+                        <span class="flex items-center gap-1.5 text-purple-400">
+                            <span class="w-3 h-2 bg-purple-500 rounded border border-purple-300"></span> Shadow Block
+                        </span>
+                        <span class="flex items-center gap-1.5 text-amber-400">
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Substation (25kV)
+                        </span>
+                    </div>
+                </div>
+
+                <!-- SVG / Interactive Track Container -->
+                <div class="overflow-x-auto bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner">
+                    <div id="track-schematic-svg-container" class="min-w-[1000px] h-[340px] relative">
+                        <!-- SVG Drawn by track_map.js -->
+                    </div>
+                </div>
+
+                <!-- Clicked Section Inspector Details -->
+                <div id="section-inspector-card" class="p-4 rounded-lg bg-slate-900/90 border border-rail-border text-xs hidden">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <span id="inspect-sec-badge" class="px-2 py-0.5 rounded font-mono font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30">SEC_GZB_MIU_UP</span>
+                            <span id="inspect-sec-title" class="font-bold text-white text-sm">Ghaziabad Jn to Maripat (KM 25.4 - 35.8)</span>
+                        </div>
+                        <button onclick="closeInspector()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <div id="inspect-sec-details" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3 text-slate-300">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: MULTI-HORIZON GANTT SCHEDULER -->
+        <section id="view-gantt-schedule" class="tab-content hidden space-y-6">
+            <div class="bg-rail-card p-5 rounded-xl border border-rail-border space-y-4">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-rail-border pb-3">
+                    <div>
+                        <h2 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-timeline text-purple-400"></i>
+                            Multi-Horizon Intelligent Gantt Timeline
+                        </h2>
+                        <p class="text-xs text-slate-400">All 14 corridor stations · synchronized multi-department shadow blocks · track possessions · train regulations</p>
+                    </div>
+
+                    <!-- Controls row: station filter + horizon toggles -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <!-- Station filter -->
+                        <div class="flex items-center gap-1.5 bg-slate-900 px-2 py-1 rounded-lg border border-rail-border">
+                            <i class="fa-solid fa-location-dot text-sky-400 text-xs"></i>
+                            <select id="gantt-station-filter"
+                                    class="bg-transparent text-xs text-slate-200 focus:outline-none pr-1">
+                                <option value="ALL">All Stations</option>
+                            </select>
+                        </div>
+                        <!-- Horizon toggles -->
+                        <div class="flex items-center space-x-1 bg-slate-900 p-1 rounded-lg border border-rail-border">
+                            <button onclick="setGanttHorizon('DAILY')" id="gantt-btn-daily"
+                                    class="px-3 py-1 rounded-md text-xs font-semibold bg-sky-500 text-white transition">
+                                Daily (24h)
+                            </button>
+                            <button onclick="setGanttHorizon('WEEKLY')" id="gantt-btn-weekly"
+                                    class="px-3 py-1 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition">
+                                Weekly (7-Day)
+                            </button>
+                            <button onclick="setGanttHorizon('MONTHLY')" id="gantt-btn-monthly"
+                                    class="px-3 py-1 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition">
+                                Monthly (30-Day)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gantt Legend -->
+                <div class="flex flex-wrap items-center gap-4 text-xs bg-slate-900/50 p-2.5 rounded-lg border border-rail-border">
+                    <span class="flex items-center gap-1.5 text-purple-400 font-semibold">
+                        <span class="w-3.5 h-3.5 rounded bg-purple-600 border border-purple-400"></span> Shadow Block (Joint)
+                    </span>
+                    <span class="flex items-center gap-1.5 text-sky-400">
+                        <span class="w-3.5 h-3.5 rounded bg-sky-600"></span> TMS Track
+                    </span>
+                    <span class="flex items-center gap-1.5 text-emerald-400">
+                        <span class="w-3.5 h-3.5 rounded bg-emerald-600"></span> SMMS Signal
+                    </span>
+                    <span class="flex items-center gap-1.5 text-amber-400">
+                        <span class="w-3.5 h-3.5 rounded bg-amber-600"></span> TDMS OHE
+                    </span>
+                    <span class="flex items-center gap-1.5 text-rose-400">
+                        <span class="w-2 h-2 rounded-full bg-rose-500 inline-block"></span> TSR Active
+                    </span>
+                    <span class="flex items-center gap-1.5 text-slate-400 ml-auto text-[10px] font-mono">
+                        Click station bar at bottom to filter · Click block to view memo
+                    </span>
+                </div>
+
+                <!-- Gantt Container -->
+                <div id="gantt-chart-container" class="space-y-3">
+                    <!-- Gantt generated by gantt.js -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: DATA INTEGRATION HUB (TMS, SMMS, TDMS, COA) -->
+        <section id="view-data-hub" class="tab-content hidden space-y-6">
+            <div class="bg-rail-card p-5 rounded-xl border border-rail-border space-y-4">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-rail-border pb-3">
+                    <div>
+                        <h2 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-database text-sky-400"></i>
+                            Unified Maintenance & Train Operation Data Ingestion Hub
+                        </h2>
+                        <p class="text-xs text-slate-400">Real-time synchronized records across TMS (Engineering), SMMS (S&T), TDMS (TRD), and COA Timetable</p>
+                    </div>
+
+                    <!-- Filter Controls -->
+                    <div class="flex items-center space-x-2">
+                        <select id="hub-dept-filter" onchange="filterDataHub()" class="bg-slate-900 text-xs text-slate-200 border border-rail-border rounded-lg px-3 py-1.5 focus:outline-none focus:border-sky-500">
+                            <option value="ALL">All Departments</option>
+                            <option value="TMS">TMS (Track / Civil)</option>
+                            <option value="SMMS">SMMS (Signalling & Telecom)</option>
+                            <option value="TDMS">TDMS (Traction / TRD)</option>
+                        </select>
+                        <select id="hub-horizon-filter" onchange="filterDataHub()" class="bg-slate-900 text-xs text-slate-200 border border-rail-border rounded-lg px-3 py-1.5 focus:outline-none focus:border-sky-500">
+                            <option value="ALL">All Horizons</option>
+                            <option value="DAILY">Daily</option>
+                            <option value="WEEKLY">Weekly</option>
+                            <option value="MONTHLY">Monthly</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Tasks Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left text-slate-300">
+                        <thead class="bg-slate-900/80 text-slate-400 uppercase font-mono border-b border-rail-border">
+                            <tr>
+                                <th class="py-3 px-3">Task ID</th>
+                                <th class="py-3 px-3">Dept</th>
+                                <th class="py-3 px-3">Category & Details</th>
+                                <th class="py-3 px-3">Section & KM</th>
+                                <th class="py-3 px-3">Duration</th>
+                                <th class="py-3 px-3">Overdue</th>
+                                <th class="py-3 px-3">AI Priority</th>
+                                <th class="py-3 px-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-hub-table-body" class="divide-y divide-slate-800">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 5: AI RISK & PRIORITIZER MATRIX -->
+        <section id="view-ai-priority" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Weights Adjuster -->
+                <div class="bg-rail-card p-5 rounded-xl border border-rail-border space-y-4">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-sky-400"></i>
+                        AI Prioritization Criteria Weights
+                    </h3>
+                    <p class="text-xs text-slate-400">Adjust the multi-criteria optimization weights to evaluate priority sensitivity</p>
+
+                    <div class="space-y-4 text-xs pt-2">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="font-semibold text-rose-400">Safety Risk Score (35%)</span>
+                                <span id="val-ws" class="font-mono">0.35</span>
+                            </div>
+                            <input type="range" min="0.1" max="0.6" step="0.05" value="0.35" id="slider-ws" oninput="updateWeightsUI()" class="w-full accent-rose-500">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="font-semibold text-amber-400">Asset Degradation / GMT (25%)</span>
+                                <span id="val-wd" class="font-mono">0.25</span>
+                            </div>
+                            <input type="range" min="0.1" max="0.5" step="0.05" value="0.25" id="slider-wd" oninput="updateWeightsUI()" class="w-full accent-amber-500">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="font-semibold text-purple-400">Statutory Overdue Penalty (20%)</span>
+                                <span id="val-wu" class="font-mono">0.20</span>
+                            </div>
+                            <input type="range" min="0.1" max="0.5" step="0.05" value="0.20" id="slider-wu" oninput="updateWeightsUI()" class="w-full accent-purple-500">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="font-semibold text-sky-400">Traffic Disruption Impact (12%)</span>
+                                <span id="val-wt" class="font-mono">0.12</span>
+                            </div>
+                            <input type="range" min="0.05" max="0.3" step="0.01" value="0.12" id="slider-wt" oninput="updateWeightsUI()" class="w-full accent-sky-500">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="font-semibold text-emerald-400">TSR Avoidance Benefit (8%)</span>
+                                <span id="val-wa" class="font-mono">0.08</span>
+                            </div>
+                            <input type="range" min="0.05" max="0.25" step="0.01" value="0.08" id="slider-wa" oninput="updateWeightsUI()" class="w-full accent-emerald-500">
+                        </div>
+
+                        <button onclick="reoptimizeWeights()" class="w-full py-2 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold rounded-lg text-xs transition shadow-lg shadow-sky-500/20 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                            Recompute AI Priorities
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Priority Ranking Breakdown Table -->
+                <div class="lg:col-span-2 bg-rail-card p-5 rounded-xl border border-rail-border space-y-4">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-list-ol text-emerald-400"></i>
+                        AI Risk Score & Explainability Breakdown
+                    </h3>
+                    <div class="overflow-x-auto max-h-[480px] overflow-y-auto scrollbar-thin">
+                        <table class="w-full text-xs text-left text-slate-300">
+                            <thead class="bg-slate-900/90 text-slate-400 uppercase font-mono sticky top-0 border-b border-rail-border">
+                                <tr>
+                                    <th class="py-2.5 px-3">Rank</th>
+                                    <th class="py-2.5 px-3">Task</th>
+                                    <th class="py-2.5 px-3">Dept</th>
+                                    <th class="py-2.5 px-3 text-center">Safety</th>
+                                    <th class="py-2.5 px-3 text-center">Degradation</th>
+                                    <th class="py-2.5 px-3 text-center">Overdue</th>
+                                    <th class="py-2.5 px-3 text-right">AI Score</th>
+                                </tr>
+                            </thead>
+                            <tbody id="priority-explain-table-body" class="divide-y divide-slate-800">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 6: WHAT-IF SIMULATION STUDIO -->
+        <section id="view-what-if" class="tab-content hidden space-y-6">
+
+            <!-- Header -->
+            <div class="bg-rail-card p-5 rounded-xl border border-rail-border">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-vial-circle-check text-sky-400"></i>
+                            What-If Disruption Simulation Studio
+                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30 font-mono">10 SCENARIOS</span>
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Configure parameters and run any scenario. The AI Constraint Solver re-optimises the full schedule in real time and shows live KPI deltas.</p>
+                    </div>
+                    <span id="sim-status-badge" class="text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-mono shrink-0">
+                        Baseline Steady State
+                    </span>
+                </div>
+            </div>
+
+            <!-- 10-scenario grid (built by simulator.js initSimulator()) -->
+            <div id="sim-scenario-grid"
+                 class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+                <!-- Cards injected by simulator.js -->
+            </div>
+
+            <!-- Results panel -->
+            <div id="sim-results-panel" class="bg-rail-card p-5 rounded-xl border border-rail-border space-y-4">
+                <div class="flex items-center justify-between border-b border-rail-border pb-3">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-emerald-400"></i>
+                        Real-Time Simulation Impact &amp; KPI Deltas
+                    </h3>
+                </div>
+
+                <div id="sim-scenario-description"
+                     class="p-3 rounded-lg bg-slate-900/80 border border-rail-border text-xs text-slate-300 leading-relaxed">
+                    Pick a scenario above, configure its parameters, then click <strong>Run Scenario</strong>. The AI Constraint Solver will re-optimise the full schedule and display live KPI deltas here.
+                </div>
+
+                <!-- KPI summary cards -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div class="p-3 rounded-lg bg-slate-900/60 border border-rail-border">
+                        <span class="text-[10px] text-slate-400 uppercase font-mono block">Scheduled Blocks</span>
+                        <span id="sim-kpi-blocks" class="text-xl font-bold font-mono text-white">—</span>
+                    </div>
+                    <div class="p-3 rounded-lg bg-slate-900/60 border border-rail-border">
+                        <span class="text-[10px] text-slate-400 uppercase font-mono block">Shadow Blocks</span>
+                        <span id="sim-kpi-shadow" class="text-xl font-bold font-mono text-purple-400">—</span>
+                    </div>
+                    <div class="p-3 rounded-lg bg-slate-900/60 border border-rail-border">
+                        <span class="text-[10px] text-slate-400 uppercase font-mono block">Hours Saved</span>
+                        <span id="sim-kpi-saved" class="text-xl font-bold font-mono text-emerald-400">—</span>
+                    </div>
+                    <div class="p-3 rounded-lg bg-slate-900/60 border border-rail-border">
+                        <span class="text-[10px] text-slate-400 uppercase font-mono block">Train Delay</span>
+                        <span id="sim-kpi-delay" class="text-xl font-bold font-mono text-amber-400">—</span>
+                    </div>
+                </div>
+
+                <!-- Scenario-specific insight panel -->
+                <div id="sim-extra-panel" class="hidden p-4 rounded-xl border border-slate-700 bg-slate-900/60 space-y-3">
+                    <!-- Populated by simulator.js renderSimulationResults() -->
+                </div>
+
+                <!-- Re-optimised block list -->
+                <div class="space-y-2">
+                    <h4 class="text-xs font-bold text-slate-300 uppercase font-mono flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-sky-400"></i> Updated Schedule Output
+                    </h4>
+                    <div id="sim-block-list" class="space-y-2 max-h-[340px] overflow-y-auto scrollbar-thin pr-1">
+                        <div class="p-3 text-xs text-slate-500 text-center">Run a scenario to see the re-optimised block schedule here.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 7: OFFICIAL IR MEMOS (T/351, POWER BLOCK, COA) -->
+        <section id="view-memos" class="tab-content hidden space-y-6">
+            <div class="bg-rail-card p-5 rounded-xl border border-rail-border space-y-4">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-rail-border pb-3">
+                    <div>
+                        <h2 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-file-signature text-amber-400"></i>
+                            Official Indian Railways Disconnection & Sanction Memos
+                        </h2>
+                        <p class="text-xs text-slate-400">Auto-generated Form S&T T/351 Disconnection Notice, TRD Power Block Permit, and COA Block Advice</p>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <label class="text-xs text-slate-400">Select Block:</label>
+                        <select id="memo-block-select" onchange="loadBlockMemo()" class="bg-slate-900 text-xs text-slate-200 border border-rail-border rounded-lg px-3 py-1.5 focus:outline-none focus:border-sky-500">
+                            <!-- Populated by JS -->
+                        </select>
+                        <button onclick="printMemo()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-print"></i> Print Memo
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Memo Tabs -->
+                <div class="flex space-x-2 border-b border-rail-border pb-2">
+                    <button onclick="setMemoType('t351')" id="btn-memo-t351" class="px-3 py-1 rounded text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        Form S&T T/351 (Disconnection)
+                    </button>
+                    <button onclick="setMemoType('power')" id="btn-memo-power" class="px-3 py-1 rounded text-xs font-bold text-slate-400 hover:text-white">
+                        TRD Power Block Permit
+                    </button>
+                    <button onclick="setMemoType('coa')" id="btn-memo-coa" class="px-3 py-1 rounded text-xs font-bold text-slate-400 hover:text-white">
+                        COA Traffic Block Advice
+                    </button>
+                </div>
+
+                <!-- Memo Text Display Box -->
+                <div class="bg-slate-950 p-5 rounded-xl border border-slate-800">
+                    <pre id="memo-text-content" class="font-mono text-xs text-emerald-400 leading-relaxed overflow-x-auto whitespace-pre">
+Loading Official Disconnection Notice...
+                    </pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 8: SUPPLIED DATA SNAPSHOT -->
+        <section id="view-supplied-data" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Supplied data summary -->
+                <div class="bg-rail-card p-5 rounded-xl border border-rail-border space-y-4">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-table-list text-sky-400 text-base"></i>
+                        Supplied Data Workspace
+                    </h3>
+                    <p class="text-xs text-slate-400">
+                        Quanti-x uses the supplied reference tables and local planning model as its single source of truth.
+                    </p>
+
+                    <!-- Active data source -->
+                    <div class="space-y-3 pt-2">
+                        <div class="p-3 rounded-lg bg-slate-900/60 border border-rail-border space-y-2">
+                            <span class="text-[10px] text-slate-400 uppercase font-mono block">Active data pipeline</span>
+                            <div class="space-y-2">
+                                <button id="btn-source-supplied" class="w-full py-2 px-3 rounded-lg text-xs font-bold bg-sky-500 text-white flex items-center justify-between transition shadow-md shadow-sky-500/20">
+                                    <span class="flex items-center gap-2">
+                                        <i class="fa-solid fa-database"></i>
+                                        Supplied Quanti-x dataset
+                                    </span>
+                                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-black/30 font-mono">ACTIVE</span>
+                                </button>
+
+                            </div>
+                        </div>
+
+                        <!-- External downloading is intentionally not part of Quanti-x. -->
+                    </div>
+                </div>
+
+                <!-- Supplied dataset summary -->
+                <div class="lg:col-span-2 bg-rail-card p-5 rounded-xl border border-rail-border space-y-4">
+                    <div class="flex items-center justify-between border-b border-rail-border pb-3">
+                        <div>
+                            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-database text-emerald-400"></i>
+                                Quanti-x supplied dataset summary
+                            </h3>
+                            <p class="text-xs text-slate-400">Local operational coverage for the Quanti-x planning workspace</p>
+                        </div>
+                        <span id="supplied-data-badge" class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-mono font-bold">
+                            Supplied data active
+                        </span>
+                    </div>
+
+                    <!-- Metric Tiles -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                        <div class="p-3 rounded-lg bg-slate-900/60 border border-rail-border">
+                            <span class="text-[10px] text-slate-400 uppercase font-mono block">Stations</span>
+                            <span id="supplied-stat-stations" class="text-2xl font-bold font-mono text-white">20</span>
+                        </div>
+                        <div class="p-3 rounded-lg bg-slate-900/60 border border-rail-border">
+                            <span class="text-[10px] text-slate-400 uppercase font-mono block">Trains</span>
+                            <span id="supplied-stat-trains" class="text-2xl font-bold font-mono text-sky-400">26</span>
+                        </div>
+                        <div class="p-3 rounded-lg bg-slate-900/60 border border-rail-border">
+                            <span class="text-[10px] text-slate-400 uppercase font-mono block">Track Sections</span>
+                            <span id="supplied-stat-sections" class="text-2xl font-bold font-mono text-purple-400">38</span>
+                        </div>
+                        <div class="p-3 rounded-lg bg-slate-900/60 border border-rail-border">
+                            <span class="text-[10px] text-slate-400 uppercase font-mono block">Maintenance Demands</span>
+                            <span id="supplied-stat-tasks" class="text-2xl font-bold font-mono text-amber-400">17</span>
+                        </div>
+                    </div>
+
+                    <!-- Supplied data explorer -->
+                    <div class="space-y-3">
+                        <div class="flex space-x-2 border-b border-rail-border pb-2 text-xs">
+                            <button id="btn-supplied-stations" class="px-3 py-1 rounded font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                                stations.csv (20)
+                            </button>
+                            <button id="btn-supplied-trains" class="px-3 py-1 rounded font-bold text-slate-400 hover:text-white">
+                                trains.csv (26)
+                            </button>
+                            <button id="btn-supplied-tms" class="px-3 py-1 rounded font-bold text-slate-400 hover:text-white">
+                                tms_defects_real.csv
+                            </button>
+                            <button id="btn-supplied-smms" class="px-3 py-1 rounded font-bold text-slate-400 hover:text-white">
+                                smms_faults_real.csv
+                            </button>
+                            <button id="btn-supplied-tdms" class="px-3 py-1 rounded font-bold text-slate-400 hover:text-white">
+                                tdms_jobs_real.csv
+                            </button>
+                        </div>
+
+                        <div class="overflow-x-auto max-h-[250px] overflow-y-auto scrollbar-thin bg-slate-950 rounded-lg p-2 border border-slate-800">
+                            <table class="w-full text-xs text-left text-slate-300">
+                                <thead id="supplied-table-head" class="bg-slate-900 text-slate-400 uppercase font-mono border-b border-slate-800 sticky top-0">
+                                    <!-- Populated by JS -->
+                                </thead>
+                                <tbody id="supplied-table-body" class="divide-y divide-slate-900">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-rail-card border-t border-rail-border py-4 px-6 text-center text-xs text-slate-500">
+        <p>Quanti-x - Integrated maintenance planning workspace</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/static/js/officer_requests.js"></script>
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/track_map.js"></script>
+    <script src="/static/js/gantt.js"></script>
+    <script src="/static/js/simulator.js"></script>
+</body>
+</html>

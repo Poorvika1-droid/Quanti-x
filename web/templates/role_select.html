@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quanti-x - Choose Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* ── Left card: clean light design card ── */
+    .engineer-card {
+      background: linear-gradient(145deg, #ffffff 0%, #f0f7ff 60%, #e8f4fd 100%);
+      border: 1.5px solid #bfdbfe;
+      border-radius: 20px;
+      box-shadow: 0 8px 40px rgba(56,189,248,0.10), 0 2px 8px rgba(0,0,0,0.06);
+      transition: box-shadow 0.25s, border-color 0.25s, transform 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .engineer-card:hover {
+      box-shadow: 0 16px 56px rgba(56,189,248,0.18), 0 4px 16px rgba(0,0,0,0.08);
+      border-color: #38bdf8;
+      transform: translateY(-2px);
+    }
+    .engineer-card .card-bg-pattern {
+      position: absolute; inset: 0; pointer-events: none; opacity: 0.06;
+      background-image: radial-gradient(circle at 80% 20%, #0ea5e9 0%, transparent 55%),
+                        repeating-linear-gradient(45deg, #0ea5e9 0px, transparent 1px, transparent 18px, #0ea5e9 19px);
+      background-size: 100% 100%, 24px 24px;
+    }
+
+    /* ── Right card: same light style as engineer card, violet accent ── */
+    .officer-card {
+      background: linear-gradient(145deg, #ffffff 0%, #f5f3ff 60%, #ede9fe 100%);
+      border: 1.5px solid #ddd6fe;
+      border-radius: 20px;
+      box-shadow: 0 8px 40px rgba(139,92,246,0.10), 0 2px 8px rgba(0,0,0,0.06);
+      transition: box-shadow 0.25s, border-color 0.25s, transform 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .officer-card:hover {
+      box-shadow: 0 16px 56px rgba(139,92,246,0.18), 0 4px 16px rgba(0,0,0,0.08);
+      border-color: #a78bfa;
+      transform: translateY(-2px);
+    }
+    .officer-card .card-bg-pattern {
+      position: absolute; inset: 0; pointer-events: none; opacity: 0.05;
+      background-image: radial-gradient(circle at 20% 80%, #7c3aed 0%, transparent 55%),
+                        repeating-linear-gradient(-45deg, #7c3aed 0px, transparent 1px, transparent 18px, #7c3aed 19px);
+      background-size: 100% 100%, 24px 24px;
+    }
+
+    /* badge pulse */
+    @keyframes badgePulse {
+      0%,100% { opacity:1; } 50% { opacity:0.55; }
+    }
+    .live-dot { animation: badgePulse 2s infinite; }
+
+    /* track line animation */
+    @keyframes trackSlide {
+      0% { stroke-dashoffset: 200; }
+      100% { stroke-dashoffset: 0; }
+    }
+    .track-anim { stroke-dasharray: 200; animation: trackSlide 2.2s ease forwards; }
+
+    /* page background */
+    body {
+      background: linear-gradient(135deg, #f0f4ff 0%, #e8eef8 40%, #f4f0fa 100%);
+      min-height: 100vh;
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center p-6 min-h-screen">
+
+  <div class="max-w-5xl w-full space-y-8">
+
+    <!-- Header -->
+    <div class="text-center">
+      <div class="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center shadow-xl"
+           style="background: linear-gradient(135deg, #1769aa, #6d4cc2);">
+        <i class="fa-solid fa-train-subway text-white text-3xl"></i>
+      </div>
+      <h1 class="mt-4 text-3xl font-bold text-slate-900">Quanti-x</h1>
+      <p class="text-slate-500 mt-1 text-sm">Integrated maintenance coordination workspace</p>
+      <div id="db-status" class="mt-2 text-xs font-mono text-slate-400 flex items-center justify-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 live-dot inline-block"></span>
+        Checking SQLite…
+      </div>
+    </div>
+
+    <!-- Portal Cards -->
+    <div class="grid md:grid-cols-2 gap-6 items-stretch">
+
+      <!-- ══ LEFT: ENGINEER PORTAL ══ -->
+      <a href="/login?role=engineer" class="engineer-card group block p-7 no-underline">
+        <div class="card-bg-pattern"></div>
+        <div class="relative z-10">
+
+          <!-- Icon badge -->
+          <div class="flex items-center justify-between">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-md"
+                 style="background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%); color:#fff;">
+              <i class="fa-solid fa-helmet-safety"></i>
+            </div>
+            <span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-sky-100 text-sky-700 border border-sky-200 uppercase tracking-wider">
+              Field Portal
+            </span>
+          </div>
+
+          <h2 class="text-2xl font-bold mt-5 text-slate-900">Engineer Portal</h2>
+          <p class="text-slate-500 mt-2 text-sm leading-relaxed">
+            TMS, SMMS and TDMS field engineers submit maintenance requirements and receive officer instructions.
+          </p>
+
+          <!-- Mini schematic illustration -->
+          <div class="mt-5 rounded-xl border border-sky-100 bg-white/70 p-4 space-y-2.5 backdrop-blur-sm">
+            <div class="flex items-center gap-2 text-[11px] text-slate-500 font-mono uppercase tracking-wide font-semibold">
+              <i class="fa-solid fa-pencil-ruler text-sky-500"></i> Submit · Review · Coordinate
+            </div>
+            <!-- Workflow SVG -->
+            <svg viewBox="0 0 340 48" class="w-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Track line -->
+              <line x1="20" y1="24" x2="320" y2="24" stroke="#bfdbfe" stroke-width="3" stroke-linecap="round"/>
+              <line class="track-anim" x1="20" y1="24" x2="320" y2="24" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+              <!-- Steps -->
+              <circle cx="20"  cy="24" r="10" fill="#38bdf8"/>
+              <circle cx="110" cy="24" r="10" fill="#0ea5e9"/>
+              <circle cx="210" cy="24" r="10" fill="#6366f1"/>
+              <circle cx="320" cy="24" r="10" fill="#10b981"/>
+              <!-- Icons text inside circles -->
+              <text x="20"  y="28" text-anchor="middle" fill="white" font-size="10" font-family="sans-serif">✏</text>
+              <text x="110" y="28" text-anchor="middle" fill="white" font-size="10" font-family="sans-serif">🧠</text>
+              <text x="210" y="28" text-anchor="middle" fill="white" font-size="10" font-family="sans-serif">👁</text>
+              <text x="320" y="28" text-anchor="middle" fill="white" font-size="10" font-family="sans-serif">✓</text>
+              <!-- Labels -->
+              <text x="20"  y="44" text-anchor="middle" fill="#64748b" font-size="7.5" font-family="monospace">Submit</text>
+              <text x="110" y="44" text-anchor="middle" fill="#64748b" font-size="7.5" font-family="monospace">AI Triage</text>
+              <text x="210" y="44" text-anchor="middle" fill="#64748b" font-size="7.5" font-family="monospace">Officer</text>
+              <text x="320" y="44" text-anchor="middle" fill="#64748b" font-size="7.5" font-family="monospace">Block</text>
+            </svg>
+          </div>
+
+          <!-- Dept chips -->
+          <div class="flex flex-wrap gap-2 mt-4">
+            <span class="text-[11px] font-mono px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 border border-blue-200">
+              <i class="fa-solid fa-train-track mr-1"></i>TMS Track
+            </span>
+            <span class="text-[11px] font-mono px-2.5 py-1 rounded-full bg-green-100 text-green-700 border border-green-200">
+              <i class="fa-solid fa-signal mr-1"></i>SMMS Signal
+            </span>
+            <span class="text-[11px] font-mono px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
+              <i class="fa-solid fa-bolt mr-1"></i>TDMS OHE
+            </span>
+          </div>
+
+          <div class="mt-5 flex items-center gap-2 text-sm font-bold text-sky-600 group-hover:text-sky-700 transition">
+            Open Engineer Portal
+            <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+          </div>
+        </div>
+      </a>
+
+      <!-- ══ RIGHT: OFFICER PORTAL (dark) ══ -->
+      <a href="/login?role=officer" class="officer-card group block p-7 no-underline">
+        <div class="card-bg-pattern"></div>
+        <div class="relative z-10">
+
+          <!-- Icon badge -->
+          <div class="flex items-center justify-between">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-md"
+                 style="background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); color:#fff;">
+              <i class="fa-solid fa-user-shield"></i>
+            </div>
+            <span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-violet-100 text-violet-700 border border-violet-200 uppercase tracking-wider">
+              Control Room
+            </span>
+          </div>
+
+          <h2 class="text-2xl font-bold mt-5 text-slate-900">Officer Portal</h2>
+          <p class="mt-2 text-sm leading-relaxed text-slate-500">
+            Review engineer requests, inspect AI priority/timetable evidence, approve or reject, and coordinate the final block plan.
+          </p>
+
+          <!-- KPI preview mini-dashboard -->
+          <div class="mt-5 rounded-xl border border-violet-100 bg-white/70 p-4 space-y-3 backdrop-blur-sm">
+            <div class="flex items-center gap-2 text-[11px] text-slate-500 font-mono uppercase tracking-wide font-semibold">
+              <i class="fa-solid fa-gauge-high text-violet-500"></i> Live Cockpit Metrics
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <div class="rounded-lg p-2.5 text-center bg-emerald-50 border border-emerald-200">
+                <div class="text-lg font-bold font-mono text-emerald-600">96.8%</div>
+                <div class="text-[9px] font-mono uppercase text-emerald-500">Availability</div>
+              </div>
+              <div class="rounded-lg p-2.5 text-center bg-violet-50 border border-violet-200">
+                <div class="text-lg font-bold font-mono text-violet-600">+48%</div>
+                <div class="text-[9px] font-mono uppercase text-violet-500">Shadow Gain</div>
+              </div>
+              <div class="rounded-lg p-2.5 text-center bg-amber-50 border border-amber-200">
+                <div class="text-lg font-bold font-mono text-amber-600">100%</div>
+                <div class="text-[9px] font-mono uppercase text-amber-500">Safety</div>
+              </div>
+            </div>
+            <!-- Corridor mini-bar -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-[9px] font-mono text-slate-400">
+                <span>NDLS</span><span class="text-slate-500">Delhi–Aligarh–Tundla 150KM HDN</span><span>HRS</span>
+              </div>
+              <div class="relative h-2 rounded-full overflow-hidden bg-violet-100">
+                <div class="absolute inset-y-0 left-0 rounded-full" style="width:68%; background: linear-gradient(90deg, #7c3aed, #38bdf8);"></div>
+                <div class="absolute inset-y-0 rounded-full w-2 h-2 top-0" style="left:68%; background:#a78bfa;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tags -->
+          <div class="flex flex-wrap gap-2 mt-4">
+            <span class="text-[11px] font-mono px-2.5 py-1 rounded-full bg-sky-100 text-sky-700 border border-sky-200">
+              <i class="fa-solid fa-brain mr-1"></i>AI Prioritizer
+            </span>
+            <span class="text-[11px] font-mono px-2.5 py-1 rounded-full bg-violet-100 text-violet-700 border border-violet-200">
+              <i class="fa-solid fa-layer-group mr-1"></i>Shadow Block
+            </span>
+            <span class="text-[11px] font-mono px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
+              <i class="fa-solid fa-timeline mr-1"></i>Gantt Planner
+            </span>
+          </div>
+
+          <div class="mt-5 flex items-center gap-2 text-sm font-bold text-violet-600 group-hover:text-violet-700 transition">
+            Open Officer Portal
+            <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Workflow banner -->
+    <div class="rounded-xl border p-4 text-xs text-center font-mono"
+         style="background: rgba(255,255,255,0.72); border-color:#dbe4ef; color:#475569; backdrop-filter:blur(8px);">
+      <span class="font-bold text-slate-800">Engineer request</span>
+      <span class="mx-2 text-sky-500">→</span>
+      <span class="text-indigo-600 font-semibold">Quanti-x AI analysis</span>
+      <span class="mx-2 text-sky-500">→</span>
+      <span class="text-amber-700 font-semibold">Officer decision</span>
+      <span class="mx-2 text-sky-500">→</span>
+      <span class="font-bold text-emerald-700">Optimized block plan</span>
+    </div>
+  </div>
+
+  <script>
+    fetch('/api/portal/summary')
+      .then(r => r.json())
+      .then(d => {
+        document.getElementById('db-status').innerHTML =
+          `<span class="w-2 h-2 rounded-full bg-emerald-400 live-dot inline-block"></span>
+           SQLite connected &bull; <strong>${d.requests.total}</strong> engineer requests &bull; <strong>${d.operational_tasks}</strong> operational tasks`;
+      })
+      .catch(() => {
+        document.getElementById('db-status').innerHTML =
+          `<span class="w-2 h-2 rounded-full bg-rose-400 inline-block"></span> SQLite status unavailable`;
+      });
+  </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quanti-x | Secure sign in</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body class="auth-page">
+  <main class="auth-shell">
+    <section class="auth-brand">
+      <div class="brand-mark"><i class="fa-solid fa-train-subway"></i></div>
+      <p class="eyebrow">QUANTI-X OPERATIONS</p>
+      <h1>Railway block intelligence, with a clear line of sight.</h1>
+      <p class="auth-intro">Sign in to the workspace for your role. Officer decisions and engineering requests remain separate by design.</p>
+      <a class="back-link" href="/"><i class="fa-solid fa-arrow-left"></i> View portals</a>
+    </section>
+    <section class="auth-panel">
+      <div class="auth-panel-heading">
+        <div><p class="eyebrow">SECURE ACCESS</p><h2>{{ 'Officer' if selected_role == 'officer' else 'Engineer' }} sign in</h2></div>
+        <i class="fa-solid {{ 'fa-user-shield' if selected_role == 'officer' else 'fa-helmet-safety' }}"></i>
+      </div>
+      {% if error %}<div class="auth-error">{{ error }}</div>{% endif %}
+      <form method="post" class="auth-form">
+        <input type="hidden" name="role" value="{{ selected_role }}">
+        <label>Portal<select name="role" onchange="this.form.submit()"><option value="officer" {{ 'selected' if selected_role == 'officer' }}>Officer portal</option><option value="engineer" {{ 'selected' if selected_role == 'engineer' }}>Engineer portal</option></select></label>
+        <label>Username<input name="username" autocomplete="username" required placeholder="Enter your username"></label>
+        <label>Password<input name="password" type="password" autocomplete="current-password" required placeholder="Enter your password"></label>
+        <button class="auth-submit" type="submit"><i class="fa-solid fa-arrow-right-to-bracket"></i> Sign in securely</button>
+      </form>
+      <div class="demo-credentials">
+        <p class="eyebrow">DEMO CREDENTIALS</p>
+        <div class="demo-row"><span><i class="fa-solid fa-user-shield"></i> Officer</span><code>{{ demo_users.officer.username }}</code><code>{{ demo_users.officer.password }}</code></div>
+        <div class="demo-row"><span><i class="fa-solid fa-helmet-safety"></i> Engineer</span><code>{{ demo_users.engineer.username }}</code><code>{{ demo_users.engineer.password }}</code></div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
