@@ -20,6 +20,11 @@ ENV/
 data/quanti_x.db
 data/quanti_x_training.json
 
+# Keep the data folder itself
+!data/
+!data/.gitkeep
+!data/schema.sql
+
 # IDE / OS
 .vscode/
 .idea/
