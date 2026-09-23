@@ -1,7 +1,10 @@
-# Quanti-x
+# Quanti-x — AI-Powered Automatic Block Planning System
 
-**Integrated Automatic Block Planning & Optimisation System**
-Indian Railways · Delhi – Aligarh – Tundla · 150 KM High-Density Network Corridor
+**Indian Railways | Smart India Hackathon Prototype (PS-26027)**
+
+> **SIH 2026 Problem Statement ID 26027** — AI-Powered Automatic Block Planning to Maximize Asset Availability for Train Operations on Indian Railways
+
+Delhi – Aligarh – Tundla · 150 KM High-Density Network Corridor
 
 Quanti-x is a full-stack railway maintenance coordination workspace. Field engineers submit maintenance requirements; the AI engine analyses, prioritises, and schedules them; the control officer reviews evidence and sanctions the final block plan — all in one shared interface backed by SQLite.
 
