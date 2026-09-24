@@ -436,7 +436,12 @@ async function reoptimizeWeights() {
         renderDataHub();
         renderPriorityExplain();
         renderGanttChart();
-        alert("Optimization complete: AI Prioritization weights updated and schedules regenerated!");
+        // inline toast — no blocking alert
+        const _t = document.createElement('div');
+        _t.textContent = 'AI weights updated — schedule regenerated.';
+        _t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#1e293b;color:#38bdf8;border:1px solid #38bdf8;padding:10px 18px;border-radius:10px;font-size:12px;font-family:monospace;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.4);';
+        document.body.appendChild(_t);
+        setTimeout(() => _t.remove(), 3500);
     } catch (err) {
         console.error("Reoptimization error:", err);
     }

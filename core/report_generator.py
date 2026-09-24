@@ -116,7 +116,7 @@ Geographical Limits: KM {block.start_km:.1f} to KM {block.end_km:.1f}
 Sanctioned Window: {block.start_time_str} IST to {block.end_time_str} IST ({block.duration_mins} Minutes)
 
 Departments Authorized on Track:
-{', '.join('â–¶ ' + d.value for d in block.departments_involved)}
+{', '.join('> ' + d.value for d in block.departments_involved)}
 
 Tasks Covered in Single Possession:
 {chr(10).join(' - [' + t.department.value + '] ' + t.task_name for t in block.tasks)}

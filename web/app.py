@@ -750,11 +750,12 @@ def get_memo(block_id: str):
     dummy_task = None
     if target_block["tasks"]:
         first_t = target_block["tasks"][0]
-        dummy_task = tasks[0] # fallback
         for t in tasks:
             if t.task_id == first_t.get("task_id"):
                 dummy_task = t
                 break
+        if dummy_task is None and tasks:
+            dummy_task = tasks[0]
 
     # We need a ScheduledBlock wrapper to call report generator
     class BlockWrapper:
